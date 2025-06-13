@@ -14,7 +14,7 @@ Necesitarás tener instalado el siguiente software:
 - Git
 - Node.js (solo se requiere si se ejecuta sin Docker)
 
-##Instalacion para distintas distribuciones
+### Instalacion para distintas distribuciones
 
 Debian/Ubuntu:
 ```
