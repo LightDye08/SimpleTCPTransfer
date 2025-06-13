@@ -286,6 +286,38 @@
             color: var(--accent-color);
         }
 
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            background-color: var(--success-color);
+            color: white;
+            box-shadow: var(--box-shadow);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification.hidden {
+            display: none;
+        }
+
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -302,6 +334,13 @@
                 width: 100%;
                 justify-content: flex-end;
             }
+
+            .notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                width: calc(100% - 20px);
+            }
         }
     </style>
 </head>
@@ -317,6 +356,12 @@
             </div>
         </div>
     </header>
+
+    <!-- Notification Container -->
+    <div id="notification" class="notification hidden">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-message"></span>
+    </div>
 
     <div class="container">
         <div class="card">
@@ -357,6 +402,36 @@
     </div>
 
     <script>
+        // Función para mostrar notificación
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            const messageSpan = document.getElementById('notification-message');
+            const icon = notification.querySelector('i');
+            
+            // Actualizar contenido
+            messageSpan.textContent = message;
+            
+            // Actualizar estilos según tipo
+            if (isError) {
+                notification.classList.remove('notification-success');
+                notification.classList.add('error');
+                icon.className = 'fas fa-exclamation-circle';
+            } else {
+                notification.classList.remove('error');
+                icon.className = 'fas fa-check-circle';
+            }
+            
+            // Mostrar con animación
+            notification.classList.remove('hidden');
+            notification.classList.add('show');
+            
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.classList.add('hidden'), 300);
+            }, 3000);
+        }
+        
         // Función para cargar la lista de archivos
         function loadFileList() {
             fetch('/list-files')
@@ -394,7 +469,7 @@
                                     <i class="fas fa-download"></i>
                                     Descargar
                                 </a>
-                                <a href="/delete/${encodedName}" class="btn btn-danger btn-sm">
+                                <a href="#" class="btn btn-danger btn-sm delete-btn" data-filename="${file.name}">
                                     <i class="fas fa-trash-alt"></i>
                                     Eliminar
                                 </a>
@@ -511,7 +586,83 @@
                 fileNameDiv.style.display = 'block';
             }
         }
+        
+        // AJAX form submission
+        document.querySelector('.upload-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const fileInput = document.getElementById('fileInput');
+            
+            // Validar que se haya seleccionado un archivo
+            if (fileInput.files.length === 0) {
+                showNotification('Por favor selecciona un archivo', true);
+                return;
+            }
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Error en la respuesta del servidor');
+            })
+            .then(data => {
+                if (data.success) {
+                    showNotification(`Archivo "${data.filename}" subido con éxito`);
+                    
+                    // Resetear formulario
+                    fileInput.value = '';
+                    document.getElementById('fileName').style.display = 'none';
+                    
+                    // Actualizar lista de archivos
+                    loadFileList();
+                } else {
+                    showNotification(data.message || 'Error al subir el archivo', true);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al subir el archivo', true);
+            });
+        });
+        
+        // Event delegation for delete buttons
+        document.getElementById('fileList').addEventListener('click', function(e) {
+            if (e.target.closest('.delete-btn')) {
+                e.preventDefault();
+                const button = e.target.closest('.delete-btn');
+                const filename = button.getAttribute('data-filename');
+                deleteFile(filename);
+            }
+        });
+
+        // Function to handle file deletion
+        function deleteFile(filename) {
+            const encodedName = encodeURIComponent(filename);
+            
+            fetch(`/delete/${encodedName}`, {
+                method: 'GET'
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Error en la respuesta del servidor');
+            })
+            .then(text => {
+                showNotification(`Archivo "${filename}" eliminado con éxito`);
+                // Refresh file list
+                loadFileList();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al eliminar el archivo', true);
+            });
+        }
     </script>
 </body>
 </html>
-    
