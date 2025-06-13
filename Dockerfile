@@ -1,14 +1,16 @@
-# Usa la imagen oficial de Node.js
+# Usa una imagen base de Node
 FROM node:24-alpine
 
-# Directorio de trabajo
+# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia los archivos necesarios
-COPY server.js .
+# Copia todo el contenido del proyecto al contenedor
+COPY . .
 
-# Expone el puerto del servidor
+# Expone el puerto en el que escucha tu servidor
 EXPOSE 3000
 
-# Inicia el servidor
+# Comando para ejecutar el servidor
 CMD ["node", "server.js"]
+
+
