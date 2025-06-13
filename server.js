@@ -1,3 +1,7 @@
+/// Oscar Jesús Trejo Rocha
+/// 367630 - UACH
+/// Universidad Autónoma de Chihuahua
+
 const http = require('http');
 const fs = require('fs');
 const readline = require('readline');
