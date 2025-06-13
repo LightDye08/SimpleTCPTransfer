@@ -43,7 +43,7 @@ docker build -t node-server .
 
 3. Ejecuta el contenedor:
 ```
-docker run -p 3000:3000 -d --name <mi-servidor> node-server
+docker run -it -p 3000:3000 node-server:latest
 ```
 
 4. Verifica que el servidor esté funcionando:
@@ -57,7 +57,7 @@ El servidor proporciona un menú interactivo al iniciarse:
 
 1. Accede a la interfaz del servidor:
 ```
-docker exec -it mi-servidor /bin/sh
+docker run -it -p 3000:3000 node-server:latest
 ```
 
 2. El servidor mostrará:
@@ -87,7 +87,7 @@ ab -n 100 -c 10 http://localhost:3000/
 Para conectarte al servidor desde otra maquina puedes usar:
 
 ```
-ncat localhost 3000
+curl localhost 3000
 ```
 ## Despliegue
 
@@ -100,7 +100,7 @@ docker build -t node-server-prod .
 
 2. Ejecuta con política de reinicio:
 ```
-docker run -p 3000:3000 -d --name servidor-produccion --restart always node-server-prod
+docker run -it -p 3000:3000 -d --name servidor-produccion --restart always node-server-prod
 ```
 
 ## Construido con
