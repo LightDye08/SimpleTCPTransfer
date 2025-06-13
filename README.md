@@ -32,8 +32,8 @@ Sigue estos pasos para configurar el proyecto:
 
 1. Clona el repositorio:
 ```
-git clone https://github.com/tu-usuario/tu-repositorio.git
-cd tu-repositorio
+https://github.com/LightDye08/basictcpserver
+cd basictcpserver
 ```
 
 2. Construye la imagen de Docker:
