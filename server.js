@@ -5,24 +5,27 @@
 const http = require('http');
 const fs = require('fs');
 const readline = require('readline');
+const { exec } = require('child_process');
 
 // Configuración
 const PORT = 3000;
 const FILE_NAME = 'archivo.txt';
+const HOLA_MUNDO_SCRIPT = 'holamundo.js';
 
 // Menú interactivo
 function showMenu() {
   console.log("=== Modo de Ejecución del Servidor ===");
   console.log("1. Modo Síncrono (bloqueante)");
   console.log("2. Modo Asíncrono (no bloqueante)");
-  console.log("3. Salir");
+  console.log("3. Ejecutar Hola Mundo");
+  console.log("4. Salir");
 
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
 
-  rl.question("Selecciona el modo (1-3): ", (opcion) => {
+  rl.question("Selecciona el modo (1-4): ", (opcion) => {
     switch (opcion) {
       case '1':
         startServer(true); // Síncrono
@@ -31,6 +34,10 @@ function showMenu() {
         startServer(false); // Asíncrono
         break;
       case '3':
+        executeHolaMundo();
+        rl.close();
+        break;
+      case '4':
         console.log("Saliendo...");
         rl.close();
         break;
@@ -38,6 +45,23 @@ function showMenu() {
         console.log("Opción no válida. Saliendo...");
         rl.close();
     }
+  });
+}
+
+// Función para ejecutar el script Hola Mundo
+function executeHolaMundo() {
+  console.log("\nEjecutando Hola Mundo...\n");
+  exec(`node ${HOLA_MUNDO_SCRIPT}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error al ejecutar el script: ${error}`);
+      return;
+    }
+    console.log(stdout);
+    if (stderr) console.error(stderr);
+    console.log("\nPresiona cualquier tecla para volver al menú...");
+    process.stdin.once('data', () => {
+      showMenu();
+    });
   });
 }
 
