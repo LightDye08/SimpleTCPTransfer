@@ -116,21 +116,26 @@ function handleFileUpload(req, res) {
             
             fs.writeFile(path.join(UPLOADS_DIR, filename), fileContent, (err) => {
                 if (err) {
-                    res.writeHead(500, { 'Content-Type': 'text/plain' });
-                    res.end('Error al guardar el archivo');
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        success: false,
+                        message: 'Error al guardar el archivo'
+                    }));
                 } else {
-                    res.writeHead(200, { 'Content-Type': 'text/html' });
-                    res.end(`
-                        <h1>Archivo subido con éxito</h1>
-                        <p>Nombre: ${filename}</p>
-                        <p>Tamaño: ${fileContent.length} bytes</p>
-                        <a href="/">Volver al inicio</a>
-                    `);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        success: true,
+                        filename: filename,
+                        size: fileContent.length
+                    }));
                 }
             });
         } else {
-            res.writeHead(400, { 'Content-Type': 'text/plain' });
-            res.end('Formato de solicitud incorrecto');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                success: false,
+                message: 'Formato de solicitud incorrecto'
+            }));
         }
     });
 }
@@ -209,13 +214,21 @@ function handleFileDelete(req, res, filename) {
     
     fs.unlink(filePath, (err) => {
         if (err) {
-            res.writeHead(500, { 'Content-Type': 'text/html' });
-            res.end('<h1>500 - Error al eliminar el archivo</h1>');
+            if (err.code === 'ENOENT') {
+                // Archivo no encontrado
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end('<h1>404 - Archivo no encontrado</h1>');
+            } else {
+                // Error del servidor
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end('<h1>500 - Error al eliminar el archivo</h1>');
+            }
             return;
         }
 
+        // Retornar HTML mínimo (será ignorado por AJAX)
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end('<h1>Archivo eliminado con éxito</h1><a href="/">Volver al inicio</a>');
+        res.end('<h1>Archivo eliminado con éxito</h1>');
     });
 }
 
