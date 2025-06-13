@@ -1,17 +1,11 @@
 # Usa la imagen oficial de Node.js
-FROM node:18-alpine
-
-# Instala Git (necesario para clonar el repo)
-RUN apk add --no-cache git
-
-# Clona el repositorio (cambia la URL por la tuya)
-RUN git clone https://github.com/LightDye08/basictcpserver /app
+FROM node:24-alpine
 
 # Directorio de trabajo
 WORKDIR /app
 
-# Instala dependencias (si hay package.json)
-RUN npm install
+# Copia los archivos necesarios
+COPY server.js .
 
 # Expone el puerto del servidor
 EXPOSE 3000

@@ -10,7 +10,6 @@ const { exec } = require('child_process');
 // Configuración
 const PORT = 3000;
 const FILE_NAME = 'archivo.txt';
-const HOLA_MUNDO_SCRIPT = 'holamundo.js';
 
 // Menú interactivo
 function showMenu() {
@@ -48,20 +47,16 @@ function showMenu() {
   });
 }
 
-// Función para ejecutar el script Hola Mundo
+// Función para ejecutar Hola Mundo internamente
 function executeHolaMundo() {
-  console.log("\nEjecutando Hola Mundo...\n");
-  exec(`node ${HOLA_MUNDO_SCRIPT}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error al ejecutar el script: ${error}`);
-      return;
-    }
-    console.log(stdout);
-    if (stderr) console.error(stderr);
-    console.log("\nPresiona cualquier tecla para volver al menú...");
-    process.stdin.once('data', () => {
-      showMenu();
-    });
+  console.log("\n=== ¡Hola Mundo! ===");
+  
+  
+  // Esperar entrada para volver al menú
+  console.log("Presiona cualquier tecla para volver al menú...");
+  process.stdin.resume();
+  process.stdin.once('data', () => {
+    showMenu();
   });
 }
 
