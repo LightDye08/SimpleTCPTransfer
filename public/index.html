@@ -1,35 +1,359 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Servidor Node.js</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servidor Node.js - Gestor de Archivos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .section { margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-        .file-list { list-style-type: none; padding: 0; }
-        .file-list li { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-        .file-list li:last-child { border-bottom: none; }
-        .btn { padding: 8px 15px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; }
-        .btn:hover { background: #45a049; }
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --danger-color: #f72585;
+            --success-color: #4cc9f0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f5f7fa;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background-color: white;
+            box-shadow: var(--box-shadow);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo i {
+            margin-right: 0.5rem;
+        }
+
+        .status {
+            background-color: var(--light-color);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        .status span {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title i {
+            margin-right: 0.75rem;
+            color: var(--accent-color);
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-button {
+            border: 2px dashed var(--gray-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .file-input-button:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(72, 149, 239, 0.05);
+        }
+
+        .file-input-button i {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-text {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+        }
+
+        .file-input-name {
+            margin-top: 0.5rem;
+            font-weight: 500;
+            color: var(--dark-color);
+            display: none;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn i {
+            margin-right: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d91a6d;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #3ab4d9;
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .file-list {
+            list-style: none;
+            width: 100%;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            transition: var(--transition);
+        }
+
+        .file-item:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .file-icon {
+            margin-right: 1rem;
+            color: var(--gray-color);
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .file-name {
+            font-weight: 500;
+            flex-grow: 1;
+            word-break: break-all;
+            padding-right: 1rem;
+        }
+
+        .file-size {
+            color: var(--gray-color);
+            font-size: 0.85rem;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray-color);
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .file-actions {
+                margin-left: 0;
+                margin-top: 1rem;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Servidor funcionando correctamente</h1>
-    <p>Modo: ${process.env.SERVER_MODE || 'Desconocido'}</p>
-    
-    <div class="section">
-        <h2>Subir archivo</h2>
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="archivo" required>
-            <button type="submit" class="btn">Subir</button>
-        </form>
-    </div>
-    
-    <div class="section">
-        <h2>Archivos disponibles</h2>
-        <ul class="file-list" id="fileList">
-            <!-- Los archivos se cargarán aquí dinámicamente -->
-            <li>No hay archivos disponibles</li>
-        </ul>
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo">
+                <i class="fas fa-server"></i>
+                <span>Servidor Node.js</span>
+            </a>
+            <div class="status">
+                Modo: <span>${process.env.SERVER_MODE || 'Desconocido'}</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">
+                <i class="fas fa-cloud-upload-alt"></i>
+                Subir archivo
+            </h2>
+            <form class="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <div class="file-input-wrapper">
+                        <div class="file-input-button">
+                            <i class="fas fa-file-upload"></i>
+                            <div class="file-input-text">Haz clic para seleccionar un archivo o arrástralo aquí</div>
+                            <div class="file-input-name" id="fileName"></div>
+                        </div>
+                        <input type="file" class="file-input" name="archivo" id="fileInput" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload"></i>
+                    Subir archivo
+                </button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">
+                <i class="fas fa-folder-open"></i>
+                Archivos disponibles
+            </h2>
+            <ul class="file-list" id="fileList">
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <p>No hay archivos disponibles</p>
+                </div>
+            </ul>
+        </div>
     </div>
 
     <script>
@@ -39,28 +363,87 @@
                 .then(response => response.json())
                 .then(files => {
                     const fileList = document.getElementById('fileList');
-                    fileList.innerHTML = '';
                     
                     if (files.length === 0) {
-                        fileList.innerHTML = '<li>No hay archivos disponibles</li>';
+                        fileList.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No hay archivos disponibles</p>
+                            </div>
+                        `;
                         return;
                     }
                     
-                   // Dentro del forEach en loadFileList()
-files.forEach(file => {
-    const li = document.createElement('li');
-    const encodedName = encodeURIComponent(file.name);
-    li.innerHTML = `
-        ${file.name} (${formatBytes(file.size)}) 
-        <a href="/download/${encodedName}" class="btn">Descargar</a>
-        <a href="/delete/${encodedName}" class="btn" style="background: #f44336;">Eliminar</a>
-    `;
-    fileList.appendChild(li);
-}); 
+                    fileList.innerHTML = '';
+                    
+                    files.forEach(file => {
+                        const encodedName = encodeURIComponent(file.name);
+                        const fileItem = document.createElement('li');
+                        fileItem.className = 'file-item';
+                        
+                        fileItem.innerHTML = `
+                            <div class="file-info">
+                                <div class="file-icon">
+                                    <i class="${getFileIcon(file.name)}"></i>
+                                </div>
+                                <div class="file-name" title="${file.name}">${file.name}</div>
+                                <div class="file-size">${formatBytes(file.size)}</div>
+                            </div>
+                            <div class="file-actions">
+                                <a href="/download/${encodedName}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-download"></i>
+                                    Descargar
+                                </a>
+                                <a href="/delete/${encodedName}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i>
+                                    Eliminar
+                                </a>
+                            </div>
+                        `;
+                        
+                        fileList.appendChild(fileItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar archivos:', error);
                 });
         }
         
-        // Función para formatear bytes a KB/MB
+        // Función para obtener icono según extensión
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const iconMap = {
+                pdf: 'far fa-file-pdf',
+                doc: 'far fa-file-word',
+                docx: 'far fa-file-word',
+                xls: 'far fa-file-excel',
+                xlsx: 'far fa-file-excel',
+                ppt: 'far fa-file-powerpoint',
+                pptx: 'far fa-file-powerpoint',
+                jpg: 'far fa-file-image',
+                jpeg: 'far fa-file-image',
+                png: 'far fa-file-image',
+                gif: 'far fa-file-image',
+                mp3: 'far fa-file-audio',
+                wav: 'far fa-file-audio',
+                mp4: 'far fa-file-video',
+                mov: 'far fa-file-video',
+                zip: 'far fa-file-archive',
+                rar: 'far fa-file-archive',
+                txt: 'far fa-file-alt',
+                csv: 'far fa-file-csv',
+                json: 'far fa-file-code',
+                js: 'far fa-file-code',
+                html: 'far fa-file-code',
+                css: 'far fa-file-code',
+                exe: 'far fa-file',
+                default: 'far fa-file'
+            };
+            
+            return iconMap[ext] || iconMap.default;
+        }
+        
+        // Función para formatear bytes a KB/MB/GB
         function formatBytes(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -69,9 +452,65 @@ files.forEach(file => {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
         
+        // Mostrar nombre del archivo seleccionado
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const fileNameDiv = document.getElementById('fileName');
+            if (this.files.length > 0) {
+                fileNameDiv.textContent = this.files[0].name;
+                fileNameDiv.style.display = 'block';
+            } else {
+                fileNameDiv.style.display = 'none';
+            }
+        });
+        
         // Cargar lista al iniciar y cada 5 segundos
         loadFileList();
         setInterval(loadFileList, 5000);
+        
+        // Drag and drop
+        const dropArea = document.querySelector('.file-input-button');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.style.borderColor = 'var(--accent-color)';
+            dropArea.style.backgroundColor = 'rgba(72, 149, 239, 0.1)';
+        }
+        
+        function unhighlight() {
+            dropArea.style.borderColor = 'var(--gray-color)';
+            dropArea.style.backgroundColor = '';
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const input = document.getElementById('fileInput');
+            
+            if (files.length) {
+                input.files = files;
+                const fileNameDiv = document.getElementById('fileName');
+                fileNameDiv.textContent = files[0].name;
+                fileNameDiv.style.display = 'block';
+            }
+        }
     </script>
 </body>
 </html>
