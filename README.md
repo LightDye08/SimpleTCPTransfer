@@ -1,128 +1,148 @@
-# Servidor HTTP Node.js Docker y Nativo de linux
+# Servidor HTTP Node.js con Docker: Modos Síncrono y Asíncrono con Gestión de Archivos
 
-Un servidor HTTP configurable construido con Node.js que puede operar en modo síncrono y asíncrono. El proyecto está preparado para Docker y puede clonarse directamente desde GitHub para un despliegue sencillo.
+Un servidor HTTP configurable construido con Node.js que opera en modo síncrono (bloqueante) o asíncrono (no bloqueante). Incluye una interfaz web para gestión de archivos y está optimizado para despliegue con Docker.
+
+## Características principales
+
+- Selección de modo operación (síncrono/asíncrono)
+- Interfaz web para gestión de archivos
+- Operaciones CRUD para archivos (subir, listar, descargar, eliminar)
+- Configuración lista para Docker
+- Menú interactivo en terminal
+- Notificaciones en tiempo real
+- Soporte para arrastrar y soltar archivos
+
+
 
 ## Primeros pasos
 
-Estas instrucciones te permitirán obtener una copia del proyecto funcionando en tu máquina local para propósitos de desarrollo y pruebas.
-
 ### Prerrequisitos
 
-Necesitarás tener instalado el siguiente software:
-
-- Docker (opcional) ([Guía de instalación](https://docs.docker.com/get-docker/))
+- Docker ([Instalación](https://docs.docker.com/get-docker/))
+- Node.js v14+ (solo para ejecución nativa)
 - Git
-- Node.js (solo se requiere si se ejecuta sin Docker)
 
-### Instalacion para distintas distribuciones
+## Instalación con Docker
 
-Debian/Ubuntu:
-```
-sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io
-```
-
-Arch Linux:
-```
-sudo pacman -S docker
-```
-### Instalación
-
-Sigue estos pasos para configurar el proyecto:
-
-1. Clona el repositorio:
-```
-https://github.com/LightDye08/basictcpserver
+```bash
+# Clonar repositorio
+git clone https://github.com/LightDye08/basictcpserver
 cd basictcpserver
-```
 
-2. Construye la imagen de Docker:
-```
+# Construir imagen Docker
 docker build -t node-server .
-```
 
-3. Ejecuta el contenedor:
-```
+# Ejecutar contenedor
 docker run -it -p 3000:3000 node-server:latest
+````
+
+## Ejecución nativa
+
+```bash
+# Instalar dependencias (ninguna adicional requerida)
+node server.js
 ```
 
-4. Verifica que el servidor esté funcionando:
-```
-curl http://localhost:3000
-```
+## Uso del servidor
 
-## Ejecutando el servidor
+Al iniciar, se muestra un menú interactivo:
 
-El servidor proporciona un menú interactivo al iniciarse:
-
-1. Accede a la interfaz del servidor:
-```
-docker run -it -p 3000:3000 node-server:latest
-```
-
-2. El servidor mostrará:
 ```
 === Modo de Ejecución del Servidor ===
 1. Modo síncrono (bloqueante)
 2. Modo asíncrono (no bloqueante)
-3. Salir
-Selecciona modo (1-3):
+3. Ejecutar Hola Mundo
+4. Salir
+Selecciona modo (1-4):
 ```
 
-### Probando el servidor
+* **Modo síncrono**: Ideal para cargas bajas, procesa solicitudes secuencialmente
+* **Modo asíncrono**: Óptimo para alta concurrencia, usa I/O no bloqueante
+* **Hola Mundo**: Prueba básica de funcionamiento
 
-Para verificar que ambos modos funcionan:
+## Gestión de archivos vía web
 
-1. Para probar modo síncrono:
-```
+Accede a la interfaz en `http://localhost:3000`:
+
+**Funcionalidades disponibles:**
+
+* Subir archivos mediante arrastrar y soltar o selección tradicional
+* Listado de archivos con información detallada (nombre, tamaño, tipo)
+* Descarga directa de archivos
+* Eliminación segura con confirmación
+* Actualización automática de la lista de archivos
+* Notificaciones de operaciones exitosas/fallidas
+
+## Pruebas de rendimiento
+
+### Prueba básica
+
+```bash
 curl http://localhost:3000
 ```
 
-2. Para probar modo asíncrono (debería mostrar salida similar pero manejar mejor peticiones concurrentes):
-```
+### Prueba de carga (Apache Benchmark)
+
+```bash
+# Modo síncrono
 ab -n 100 -c 10 http://localhost:3000/
+
+# Modo asíncrono (mejor rendimiento concurrente)
+ab -n 1000 -c 100 http://localhost:3000/
 ```
 
+## Despliegue en producción
 
-Para conectarte al servidor desde otra maquina puedes usar:
-
-```
-curl localhost 3000
-```
-## Despliegue
-
-Para despliegue en producción:
-
-1. Construye la imagen de producción:
-```
+```bash
+# Construir imagen optimizada
 docker build -t node-server-prod .
+
+# Ejecutar en segundo plano con reinicio automático
+docker run -d -p 3000:3000 \
+  --name servidor-produccion \
+  --restart always \
+  node-server-prod
 ```
 
-2. Ejecuta con política de reinicio:
+## Estructura del proyecto
+
 ```
-docker run -it -p 3000:3000 -d --name servidor-produccion --restart always node-server-prod
+├── Dockerfile          # Configuración de contenedor
+├── server.js           # Lógica principal del servidor
+├── public/             # Archivos estáticos servidos
+│   └── index.html      # Interfaz web principal
+├── uploads/            # Archivos subidos por usuarios
+└── README.md           # Documentación
 ```
+
+## Referencia técnica
+
+### Variables de entorno
+
+| Variable      | Valor por defecto | Descripción                     |
+| ------------- | ----------------- | ------------------------------- |
+| `PORT`        | 3000              | Puerto del servidor             |
+| `UPLOADS_DIR` | uploads           | Directorio de subidas           |
+| `PUBLIC_DIR`  | public            | Directorio de archivos públicos |
+
+### Endpoints API
+
+| Endpoint          | Método | Función                     |
+| ----------------- | ------ | --------------------------- |
+| `/upload`         | POST   | Subir archivo               |
+| `/list-files`     | GET    | Obtener listado de archivos |
+| `/download/:file` | GET    | Descargar archivo           |
+| `/delete/:file`   | GET    | Eliminar archivo            |
 
 ## Construido con
 
 * [Node.js](https://nodejs.org/) - Entorno de ejecución JavaScript
 * [Docker](https://www.docker.com/) - Plataforma de contenedores
-* [Git](https://git-scm.com/) - Control de versiones
+* [Font Awesome](https://fontawesome.com/) - Iconos
+* [Roboto Font](https://fonts.google.com/specimen/Roboto) - Tipografía
 
-## Contribución
+## Autor
 
-No hay contribuciones, solo es una tarea universitaria
-
-## Control de versiones
-
-Utilizo [Github](https://github.com), [Gitlab](https://gitlab.com/), [Bitbucket](https://bitbucket.org) para el control de versiones.
-
-## Autores
-
-* **Oscar Jesus Trejo Rocha** - *Trabajo inicial* - [LightDye](https://github.com/LightDye08)
-
-## Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT
+* **Oscar Jesus Trejo Rocha** - [LightDye](https://github.com/LightDye08)
 
 
