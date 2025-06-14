@@ -106,40 +106,72 @@ function handleFileUpload(req, res) {
     
     req.on('end', () => {
         const data = Buffer.concat(body);
+        const contentType = req.headers['content-type'];
         
-        // Parsear datos multipart manualmente (solución básica)
-        const match = /name="archivo"; filename="(.*?)"\r\nContent-Type: .*?\r\n\r\n([\s\S]*?)\r\n------/.exec(data.toString());
-        
-        if (match && match[1] && match[2]) {
-            const filename = match[1];
-            const fileContent = match[2];
-            
-            fs.writeFile(path.join(UPLOADS_DIR, filename), fileContent, (err) => {
-                if (err) {
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        success: false,
-                        message: 'Error al guardar el archivo'
-                    }));
-                } else {
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        success: true,
-                        filename: filename,
-                        size: fileContent.length
-                    }));
-                }
-            });
-        } else {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                success: false,
-                message: 'Formato de solicitud incorrecto'
-            }));
+        // Validate content type
+        if (!contentType || !contentType.includes('multipart/form-data')) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'Invalid content type' }));
+            return;
         }
+        
+        // Extract boundary
+        const boundaryMatch = contentType.match(/boundary=(.*)$/);
+        if (!boundaryMatch) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'Missing boundary' }));
+            return;
+        }
+        const boundary = '--' + boundaryMatch[1];
+        const boundaryBuffer = Buffer.from(boundary);
+        
+        // Find headers and file content
+        const headerEnd = Buffer.from('\r\n\r\n');
+        const headerEndIndex = data.indexOf(headerEnd);
+        if (headerEndIndex === -1) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'Invalid form data' }));
+            return;
+        }
+        
+        // Extract filename from headers
+        const headers = data.subarray(0, headerEndIndex).toString();
+        const filenameMatch = /filename="(.*?)"/.exec(headers);
+        if (!filenameMatch) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'Filename missing' }));
+            return;
+        }
+        const filename = filenameMatch[1];
+        
+        // Extract file content
+        const fileStart = headerEndIndex + headerEnd.length;
+        const fileEnd = data.indexOf(Buffer.from(boundary), fileStart);
+        if (fileEnd === -1) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'File boundary not found' }));
+            return;
+        }
+        
+        // Remove trailing \r\n before boundary
+        const fileContent = data.subarray(fileStart, fileEnd - 2);
+        
+        // Save file
+        fs.writeFile(path.join(UPLOADS_DIR, filename), fileContent, (err) => {
+            if (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, message: 'Error saving file' }));
+            } else {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ 
+                    success: true,
+                    filename: filename,
+                    size: fileContent.length 
+                }));
+            }
+        });
     });
 }
-
 // Función para servir archivos estáticos (corregida)
 function serveStaticFile(res, filePath, contentType, responseCode = 200) {
     const fullPath = path.join(PUBLIC_DIR, filePath);
